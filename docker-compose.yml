@@ -1,0 +1,47 @@
+services:
+  # --- USER SERVICE ---
+  user-service:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    container_name: user_container
+    ports:
+      - "4500:4500" # Map to your User Service port
+    env_file:
+      - ./user_service/.env
+    environment:
+      - NODE_ENV=development
+      # ATLAS_URI is pulled from the .env file
+   #--- getway service----   
+  gateway:
+    build: ./gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - user-service
+      - song-service
+  # --- SONG SERVICE ---
+  song-service:
+    build:
+      context: ./song_service
+      dockerfile: Dockerfile
+    container_name: song_container
+    ports:
+      - "3500:3500" # Map to your Song Service port
+    env_file:
+      - ./song_service/.env
+    environment:
+      - NODE_ENV=development
+
+  # --- REVIEW SERVICE ---
+  review-service:
+    build:
+      context: ./review_service
+      dockerfile: Dockerfile
+    container_name: review_container
+    ports:
+      - "3000:3000" # Your existing mapping
+    env_file:
+      - ./review_service/.env
+    environment:
+      - NODE_ENV=development
