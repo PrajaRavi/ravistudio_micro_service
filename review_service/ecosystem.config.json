@@ -1,0 +1,19 @@
+{
+  "apps": [
+    {
+      "name": "ravistudio",
+      "script": "./index.js",
+      "exec_mode": "cluster",
+      "instances": "3",
+      "watch": false,
+      "ignore_watch": [
+        "node_modules",
+        "logs"
+      ],
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": 4500
+      }
+    }
+  ]
+}

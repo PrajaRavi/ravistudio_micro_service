@@ -10,16 +10,19 @@ services:
     env_file:
       - ./user_service/.env
     environment:
+      - App_name=user_service
       - NODE_ENV=development
+ 
+
       # ATLAS_URI is pulled from the .env file
    #--- getway service----   
-  gateway:
-    build: ./gateway
-    ports:
-      - "80:80"
-    depends_on:
-      - user-service
-      - song-service
+  # gateway:
+  #   build: ./gateway
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - user-service
+  #     - song-service
   # --- SONG SERVICE ---
   song-service:
     build:
@@ -34,14 +37,41 @@ services:
       - NODE_ENV=development
 
   # --- REVIEW SERVICE ---
-  review-service:
+  review-service1:
     build:
       context: ./review_service
       dockerfile: Dockerfile
-    container_name: review_container
+    container_name: review_container1
     ports:
       - "3000:3000" # Your existing mapping
     env_file:
       - ./review_service/.env
     environment:
+      - App_Name=review1
       - NODE_ENV=development
+
+  review-service2:
+    build:
+      context: ./review_service
+      dockerfile: Dockerfile
+    container_name: review_container2
+    ports:
+      - "3002:3000" # Your existing mapping
+    env_file:
+      - ./review_service/.env
+    environment:
+      - App_Name=review2
+      - NODE_ENV=development
+
+  review-service3:
+    build:
+      context: ./review_service
+      dockerfile: Dockerfile
+    container_name: review_container3
+    ports:
+      - "3004:3000" # Your existing mapping
+    env_file:
+      - ./review_service/.env
+    environment:
+      - App_Name=review3
+      - NODE_ENV=development        

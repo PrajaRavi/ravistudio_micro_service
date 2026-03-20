@@ -204,5 +204,5 @@ app.post("/update-DP/:id",upload.single("Profile"), updateProfileImageForApp);
 
 
 app.listen(port, () => {
-  console.log(`Server is running at ${port}`);
+  console.log(`Server is running at ${port} of ${process.env.App_name}`);
 });

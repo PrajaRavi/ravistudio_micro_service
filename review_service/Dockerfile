@@ -14,18 +14,13 @@
 
 FROM node:20-slim
 
-# 2. Install PM2 and system dependencies for monitoring
-# 'procps' is needed for PM2 to monitor CPU/RAM on Linux
-# RUN apt-get update && apt-get install -y procps && \
-#     npm install pm2 -g && \
-#     rm -rf /var/lib/apt/lists/*
 
-RUN npm install pm2 -g
-# 3. Set the working directory
 WORKDIR /app
+RUN npm install pm2 -g
 
 # 4. Copy ONLY package files first (This is the trick for speed!)
 COPY package*.json ./
+COPY  ecosystem.config.json ./
 
 # 5. Install ALL dependencies (node_modules)
 # Using 'npm ci' is faster and more reliable for Docker/Production
@@ -35,4 +30,4 @@ RUN npm install
 COPY . .
 
 # 7. Start the app with pm2-runtime
-CMD ["pm2-runtime", "start", "ecosystem.config.js"]
+CMD ["pm2-runtime", "start", "ecosystem.config.json"]

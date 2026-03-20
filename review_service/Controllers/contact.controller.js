@@ -22,6 +22,7 @@ export const PostContact=async(req,res,next)=>{
   try {
     let data=await ContactModel.create({name,email,contact,message})
     await data.save()
+    console.log("request fetched by ",process.env.App_Name)
   return res.status(200).json({success:true,msg:"successfull!!"})
     
     
