@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import fs from "fs"; // NEW
 import dotenv from "dotenv";
+import morgan from "morgan";
 // exec - Needed to execute command in shell
 
 
@@ -17,9 +18,9 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 // Set up port, defaulting to 2000 if not specified in environment
 const port = 4500;
-
 // Initialize Express application
 const app = express();
+app.use(cookieParser())
 DBConnect();
 
 // Enable CORS for all routes
@@ -29,6 +30,7 @@ app.use(
     credentials: true,
   }),
 );
+app.use(morgan("dev"))
 
 // Parse JSON and URL-encoded bodiesk
 app.use(express.json());

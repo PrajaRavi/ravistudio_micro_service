@@ -208,14 +208,14 @@ export const login = async (req, res, next) => {
     // 🍪 Send tokens in cookies
     res
       .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
+        // httpOnly: true,
+        // secure: true, if it is in production
         sameSite: "strict",
         maxAge: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
+        // httpOnly: true,
+        // secure: true, if it is in production
         sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
@@ -223,6 +223,7 @@ export const login = async (req, res, next) => {
         success: true,
         msg: "Login successful",
         email: user.email,
+        accessToken,
       });
   } catch (error) {
     console.log(error)
@@ -301,7 +302,7 @@ export const loginforapp = async (req, res, next) => {
 };
 
 export const refreshAccessToken = async (req, res) => {
-  // console.log(req.cookies)
+  console.log(req.cookies)
   const refreshToken = req.cookies.refreshToken;
   // console.log(req.cookies);
   if (!refreshToken) {

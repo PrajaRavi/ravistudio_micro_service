@@ -4,7 +4,7 @@
       "name": "ravistudio",
       "script": "./index.js",
       "exec_mode": "cluster",
-      "instances": "3",
+      "instances": "2",
       "watch": false,
       "ignore_watch": [
         "node_modules",

@@ -1,28 +1,44 @@
 services:
   # --- USER SERVICE ---
-  user-service:
+  user-service1:
     build:
       context: ./user_service
       dockerfile: Dockerfile
-    container_name: user_container
+    container_name: user_container1
     ports:
       - "4500:4500" # Map to your User Service port
     env_file:
       - ./user_service/.env
     environment:
-      - App_name=user_service
+      - App_name=user_service1
       - NODE_ENV=development
+  user-service2:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    container_name: user_container2
+    ports:
+      - "4501:4500" # Map to your User Service port
+    env_file:
+      - ./user_service/.env
+    environment:
+      - App_name=user_service2
+      - NODE_ENV=development    
+  user-service3:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    container_name: user_container3
+    ports:
+      - "4502:4500" # Map to your User Service port
+    env_file:
+      - ./user_service/.env
+    environment:
+      - App_name=user_service3
+      - NODE_ENV=development    
  
 
-      # ATLAS_URI is pulled from the .env file
-   #--- getway service----   
-  # gateway:
-  #   build: ./gateway
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - user-service
-  #     - song-service
+   
   # --- SONG SERVICE ---
   song-service:
     build:
@@ -50,28 +66,28 @@ services:
       - App_Name=review1
       - NODE_ENV=development
 
-  review-service2:
-    build:
-      context: ./review_service
-      dockerfile: Dockerfile
-    container_name: review_container2
-    ports:
-      - "3002:3000" # Your existing mapping
-    env_file:
-      - ./review_service/.env
-    environment:
-      - App_Name=review2
-      - NODE_ENV=development
+  # review-service2:
+  #   build:
+  #     context: ./review_service
+  #     dockerfile: Dockerfile
+  #   container_name: review_container2
+  #   ports:
+  #     - "3002:3000" # Your existing mapping
+  #   env_file:
+  #     - ./review_service/.env
+  #   environment:
+  #     - App_Name=review2
+  #     - NODE_ENV=development
 
-  review-service3:
-    build:
-      context: ./review_service
-      dockerfile: Dockerfile
-    container_name: review_container3
-    ports:
-      - "3004:3000" # Your existing mapping
-    env_file:
-      - ./review_service/.env
-    environment:
-      - App_Name=review3
-      - NODE_ENV=development        
+  # review-service3:
+  #   build:
+  #     context: ./review_service
+  #     dockerfile: Dockerfile
+  #   container_name: review_container3
+  #   ports:
+  #     - "3004:3000" # Your existing mapping
+  #   env_file:
+  #     - ./review_service/.env
+  #   environment:
+  #     - App_Name=review3
+  #     - NODE_ENV=development        

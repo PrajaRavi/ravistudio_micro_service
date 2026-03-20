@@ -24,6 +24,7 @@
     "metadata": "^0.1.0",
     "mongodb": "^7.0.0",
     "mongoose": "^8.11.0",
+    "morgan": "^1.10.1",
     "multer": "^1.4.5-lts.1",
     "music": "^0.0.4",
     "music-metadata": "^11.10.6",
