@@ -20,7 +20,6 @@ dotenv.config();
 const port = 4500;
 // Initialize Express application
 const app = express();
-app.use(cookieParser())
 DBConnect();
 
 // Enable CORS for all routes
@@ -36,6 +35,7 @@ app.use(morgan("dev"))
 app.use(express.json());
 // app.use(express.urlencoded({ extended: false }));
 
+app.use(cookieParser())
 app.use(express.static("./Images/Profile"));
 
 // creating roots
