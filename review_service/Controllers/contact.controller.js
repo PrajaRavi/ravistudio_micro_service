@@ -1,9 +1,12 @@
 import {ContactModel} from "../Models/contact.model.js"
 
+
+
 export const GetAllContact=async (req,res,next)=>{
   let page=req.query.page||1;
   let limit=req.query.limit||9;
 try {
+// here first i have to check in redis-cache if their is data with a key if not then find in db
 
   let data=await ContactModel.find()
   .skip(page-1)

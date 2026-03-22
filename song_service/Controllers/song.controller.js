@@ -1,114 +1,154 @@
-
 import { SongModel } from "../Models/song.model.js";
+import { createClient } from "redis";
+import { ObjectId } from "mongodb";
 
-import {ObjectId} from "mongodb";
-export const GetAllSongs=async (req,res)=>{
-   const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-const TotalSongs = await SongModel.countDocuments();
-    const skip = (page - 1) * limit;
-  try {
-    let data=await SongModel.find()
-     .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    if(!data) return;
-    console.log(data)
-    console.log("end",page,Math.ceil(TotalSongs / limit))
-      
-    return res.status(200).send({success:true,
-      msg:data,
-      totalPages:Math.ceil(TotalSongs / limit),
-      page})
-  } catch (error) {
-    console.log(error)
-    return res.send({success:false,msg:"song fetch failed"})
-  }
-}
-export const StoreUserId=async (req,res)=>{
-  const userId = req.user.id;       // from protect middleware
-  const songId=req.params.songId;
-    
-  try {
-    let data=await SongModel.findByIdAndUpdate(
-      songId,
-      {
-        $addToSet: { likedBy: userId }, // 👈 NO DUPLICATES
-      },
-      { new: true }
-    );
-    if(!data) return;
-    return res.send({success:true,msg:"User added succesfully"})
-  } catch (error) {
-    console.log(error)
-    return res.send({success:false,msg:"userid post failed in song"})
-  }
-}
+// --- Redis Setup ---
+const client = createClient();
+client.on("error", (err) => console.log("Redis Client Error", err));
+await client.connect();
 
-export const getFavouriteSongs = async (req, res, next) => {
-  const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    
+const CreateKeyForRedis = (req, page, limit) => {
+    return `${String(req.path).replace("/", "")}:page=${page}:limit=${limit}`;
+};
+
+// --- Controllers ---
+
+export const GetAllSongs = async (req, res) => {
     try {
-    const userId = req.user.id; // from protect middleware
-if(!userId){
-return res.status(401).send({msg:"Unothorized access",success:true})
-}
-    const user = await UserModel.findById(userId)
-      .select("favoriteSongs")
-      .lean();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const mykey = CreateKeyForRedis(req, page, limit);
 
-    if (!user || !user.favoriteSongs.length) {
-      return res.status(200).json({
-        success: true,
-        songs: [],
-      });
+        // 1. Check Redis Cache
+        const cachedData = await client.get(mykey);
+        if (cachedData) {
+            return res.status(200).json({
+                success: true,
+                msg: JSON.parse(cachedData), // Standardized key name to 'songs'
+            });
+        }
+
+        // 2. Database Operations
+        const totalSongs = await SongModel.countDocuments();
+        const totalPages = Math.ceil(totalSongs / limit);
+
+        if (page > totalPages && totalSongs > 0) {
+            return res.status(204).send({ success: true, msg: "no data for return" });
+        }
+
+        const data = await SongModel.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        if (!data) return res.status(404).json({ success: false, msg: "No songs found" });
+
+        // 3. Set Cache (Expiries in 1 hour) and Respond
+        await client.set(mykey, JSON.stringify(data), { EX: 3600 });
+
+        return res.status(200).send({
+            success: true,
+            msg: data,
+            totalPages,
+            page
+        });
+
+    } catch (error) {
+        console.error("GetAllSongs Error:", error);
+        return res.status(500).json({ success: false, msg: "Song fetch failed" });
     }
-// console.log(limit)
-    const songs = await SongModel.find({
-      _id: { $in: user.favoriteSongs },
-    })
-    .skip(skip)
-    .limit(limit)
-  console.log(songs.length)
-console.log("favourite song fetching")
-    res.status(200).json({
-      success: true,
-      songs,
-      totalPages:Math.ceil(songs.length/limit)
-    });
-  } catch (error) {
-    console.log(error)
-    return res.send({success:false,msg:error});
-  }
+};
+
+export const StoreUserId = async (req, res) => {
+    const userId = req.user.id;
+    const songId = req.params.songId;
+
+    try {
+        const data = await SongModel.findByIdAndUpdate(
+            songId,
+            { $addToSet: { likedBy: userId } },
+            { new: true }
+        );
+
+        if (!data) return res.status(404).json({ success: false, msg: "Song not found" });
+
+        return res.status(200).json({ success: true, msg: "User added successfully" });
+    } catch (error) {
+        console.error("StoreUserId Error:", error);
+        return res.status(500).json({ success: false, msg: "User ID post failed in song" });
+    }
+};
+
+export const getFavouriteSongs = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        if (!userId) {
+            return res.status(401).send({ msg: "Unauthorized access", success: false });
+        }
+
+        // 1. Get User's favorite song IDs
+        const user = await UserModel.findById(userId)
+            .select("favoriteSongs")
+            .lean();
+
+        if (!user || !user.favoriteSongs || user.favoriteSongs.length === 0) {
+            return res.status(200).json({
+                success: true,
+                songs: [],
+                totalPages: 0
+            });
+        }
+
+        // 2. Fetch actual song details with pagination
+        const songs = await SongModel.find({
+            _id: { $in: user.favoriteSongs },
+        })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        return res.status(200).json({
+            success: true,
+            songs,
+            totalPages: Math.ceil(user.favoriteSongs.length / limit),
+            currentPage: page
+        });
+
+    } catch (error) {
+        console.error("getFavouriteSongs Error:", error);
+        return res.status(500).json({ success: false, msg: "Failed to fetch favorites" });
+    }
 };
 
 export const removeFromFavourite = async (req, res) => {
-  try {
-    const userId = req.user.id;      // from protect middleware
-    const songId  = req.params.songId;
-    console.log(songId)
-    // remove song from user's favourites
-    let  data=await UserModel.findByIdAndUpdate(
-      userId,
-      { $pull: { favoriteSongs: ObjectId.createFromHexString(songId) } }
-    );
+    try {
+        const userId = req.user.id;
+        const songId = req.params.songId;
 
-    // remove user from song's likedBy
-    let data1=await SongModel.findByIdAndUpdate(
-      songId,
-      { $pull: { likedBy: ObjectId.createFromHexString(userId) } }
-    );
-    res.status(200).json({
-      success: true,
-      msg: "Song removed from favourites",
-    });
-  } catch (error) {
-    console.log(error)
-    res.status(500).json({
-      success: false,
-      msg: "Failed to remove favourite",
-    });
-  }
+        // Perform both updates concurrently for better performance
+        await Promise.all([
+            UserModel.findByIdAndUpdate(userId, {
+                $pull: { favoriteSongs: ObjectId.createFromHexString(songId) }
+            }),
+            SongModel.findByIdAndUpdate(songId, {
+                $pull: { likedBy: ObjectId.createFromHexString(userId) }
+            })
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            msg: "Song removed from favourites",
+        });
+    } catch (error) {
+        console.error("removeFromFavourite Error:", error);
+        return res.status(500).json({
+            success: false,
+            msg: "Failed to remove favourite",
+        });
+    }
 };

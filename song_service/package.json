@@ -30,6 +30,7 @@
     "music-metadata": "^11.10.6",
     "node.js": "^0.0.1-security",
     "nodemailer": "^6.10.0",
+    "redis": "^5.11.0",
     "sharp": "^0.34.5"
   }
 }

@@ -20,7 +20,7 @@ let UploadedAudioPath = ""
 
 dotenv.config();
 // Set up port, defaulting to 2000 if not specified in environment
-const port =  2000;
+const port =  3000;
 
 // Initialize Express application
 const app = express();
